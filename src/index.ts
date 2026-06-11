@@ -11,5 +11,8 @@ export type { LogMethods } from './domain.operations/genLogMethods';
 export { genLogMethods } from './domain.operations/genLogMethods';
 export { asDefaultLogStreamName } from './domain.operations/outlets/cloudwatch/asDefaultLogStreamName';
 export { asLambdaStyleLogGroupName } from './domain.operations/outlets/cloudwatch/asLambdaStyleLogGroupName';
-export { genCloudwatchOutlet } from './domain.operations/outlets/cloudwatch/genCloudwatchOutlet';
+export {
+  genCloudwatchOutlet,
+  type SdkAwsCloudwatch,
+} from './domain.operations/outlets/cloudwatch/genCloudwatchOutlet';
 export { withLogTrail } from './domain.operations/withLogTrail';

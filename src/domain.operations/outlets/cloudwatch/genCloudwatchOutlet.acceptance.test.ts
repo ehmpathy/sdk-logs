@@ -1,8 +1,4 @@
-import {
-  CloudWatchLogsClient,
-  DeleteLogGroupCommand,
-  GetLogEventsCommand,
-} from '@aws-sdk/client-cloudwatch-logs';
+import * as sdkAwsCloudwatch from '@aws-sdk/client-cloudwatch-logs';
 import { randomUUID } from 'crypto';
 import { given, then, when } from 'test-fns';
 
@@ -10,6 +6,9 @@ import { LogLevel } from '@src/domain.objects/constants';
 import type { LogEvent } from '@src/domain.objects/LogOutlet';
 
 import { genCloudwatchOutlet } from './genCloudwatchOutlet';
+
+const { CloudWatchLogsClient, DeleteLogGroupCommand, GetLogEventsCommand } =
+  sdkAwsCloudwatch;
 
 /**
  * .what = check if AWS credentials are available
@@ -92,11 +91,14 @@ describe('genCloudwatchOutlet', () => {
           testRegion = region;
 
           // create outlet and send event
-          const outlet = genCloudwatchOutlet({
-            region,
-            logGroup: logGroupName,
-            logStream: logStreamName,
-          });
+          const outlet = genCloudwatchOutlet(
+            {
+              region,
+              logGroup: logGroupName,
+              logStream: logStreamName,
+            },
+            { cloudwatch: { sdk: sdkAwsCloudwatch } },
+          );
 
           const event: LogEvent = {
             level: LogLevel.INFO,
@@ -147,11 +149,14 @@ describe('genCloudwatchOutlet', () => {
       when('[t0] outlet created with explicit region', () => {
         then('uses explicit region over env vars', () => {
           // outlet creation should succeed with explicit region
-          const outlet = genCloudwatchOutlet({
-            region: 'eu-west-1',
-            logGroup: '/test/explicit-region',
-            logStream: 'test-stream',
-          });
+          const outlet = genCloudwatchOutlet(
+            {
+              region: 'eu-west-1',
+              logGroup: '/test/explicit-region',
+              logStream: 'test-stream',
+            },
+            { cloudwatch: { sdk: sdkAwsCloudwatch } },
+          );
 
           // verify outlet was created (won't throw)
           expect(outlet.send).toBeDefined();
@@ -188,12 +193,15 @@ describe('genCloudwatchOutlet', () => {
           const { region } = getTestRegion();
           testRegion = region;
 
-          const outlet = genCloudwatchOutlet({
-            region,
-            logGroup: logGroupName,
-            logStream: logStreamName,
-            skipLogGroupCreation: true,
-          });
+          const outlet = genCloudwatchOutlet(
+            {
+              region,
+              logGroup: logGroupName,
+              logStream: logStreamName,
+              skipLogGroupCreation: true,
+            },
+            { cloudwatch: { sdk: sdkAwsCloudwatch } },
+          );
 
           const event: LogEvent = {
             level: LogLevel.INFO,
@@ -236,11 +244,14 @@ describe('genCloudwatchOutlet', () => {
           const { region } = getTestRegion();
           testRegion = region;
 
-          const outlet = genCloudwatchOutlet({
-            region,
-            logGroup: logGroupName,
-            logStream: logStreamName,
-          });
+          const outlet = genCloudwatchOutlet(
+            {
+              region,
+              logGroup: logGroupName,
+              logStream: logStreamName,
+            },
+            { cloudwatch: { sdk: sdkAwsCloudwatch } },
+          );
 
           for (let i = 0; i < 5; i++) {
             outlet.send({

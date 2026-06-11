@@ -1,7 +1,7 @@
 import type { Procedure, ProcedureContext } from 'domain-glossary-procedure';
 import type { Environment } from 'sdk-environment';
 
-import type { LogMethods } from '@src/domain.operations/genLogMethods';
+import type { LogMethods } from '@src/domain.objects/LogMethods';
 
 /**
  * .what = the procedure invocation trail with external identifier

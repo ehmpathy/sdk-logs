@@ -1,4 +1,4 @@
-import {
+import type {
   CloudWatchLogsClient,
   CreateLogGroupCommand,
   CreateLogStreamCommand,
@@ -7,6 +7,22 @@ import {
 } from '@aws-sdk/client-cloudwatch-logs';
 
 import type { LogEvent, LogOutlet } from '@src/domain.objects/LogOutlet';
+
+/**
+ * .what = the AWS CloudWatch Logs SDK module
+ * .why = dependency injection removes runtime AWS SDK dependency from sdk-logs
+ *
+ * .usage
+ *   import * as sdkAwsCloudwatch from '@aws-sdk/client-cloudwatch-logs';
+ *   genCloudwatchOutlet({ ... }, { cloudwatch: { sdk: sdkAwsCloudwatch } });
+ */
+export type SdkAwsCloudwatch = {
+  CloudWatchLogsClient: typeof CloudWatchLogsClient;
+  CreateLogGroupCommand: typeof CreateLogGroupCommand;
+  CreateLogStreamCommand: typeof CreateLogStreamCommand;
+  PutLogEventsCommand: typeof PutLogEventsCommand;
+  ResourceAlreadyExistsException: typeof ResourceAlreadyExistsException;
+};
 
 import { asCloudWatchBatches } from './asCloudWatchBatches';
 import { asCloudWatchLogEvents } from './asCloudWatchLogEvents';
@@ -24,28 +40,48 @@ import { drainBuffer } from './drainBuffer';
  *         AWS Lambda and CloudWatch Agent environments auto-collect console.log output.
  *         in those environments, omit this outlet to avoid duplicate logs.
  *
- * @param region - AWS region (required: from option or AWS_REGION/AWS_DEFAULT_REGION env)
- * @param logGroup - CloudWatch log group name (default: /aws/lambda/{service}-{env})
- * @param logStream - CloudWatch log stream name (default: Lambda-style YYYY/MM/DD/[$LATEST]uuid)
- * @param skipLogGroupCreation - skip log group findsert (default: false)
- * @param flushInterval - auto-flush interval in ms (default: 5000)
- * @param maxBufferSize - buffer size threshold in bytes for force-flush (default: 256000)
+ * @param input.region - AWS region (required: from option or AWS_REGION/AWS_DEFAULT_REGION env)
+ * @param input.logGroup - CloudWatch log group name (default: /aws/lambda/{service}-{env})
+ * @param input.logStream - CloudWatch log stream name (default: Lambda-style YYYY/MM/DD/[$LATEST]uuid)
+ * @param input.skipLogGroupCreation - skip log group findsert (default: false)
+ * @param input.flushInterval - auto-flush interval in ms (default: 5000)
+ * @param input.maxBufferSize - buffer size threshold in bytes for force-flush (default: 256000)
+ * @param context.cloudwatch.sdk - the @aws-sdk/client-cloudwatch-logs module
+ * @param context.cloudwatch.client - optional pre-configured CloudWatchLogsClient
  */
-export const genCloudwatchOutlet = ({
-  region: regionOverride,
-  logGroup,
-  logStream,
-  skipLogGroupCreation,
-  flushInterval,
-  maxBufferSize,
-}: {
-  region?: string;
-  logGroup?: string;
-  logStream?: string;
-  skipLogGroupCreation?: boolean;
-  flushInterval?: number;
-  maxBufferSize?: number;
-} = {}): LogOutlet => {
+export const genCloudwatchOutlet = (
+  input: {
+    region?: string;
+    logGroup?: string;
+    logStream?: string;
+    skipLogGroupCreation?: boolean;
+    flushInterval?: number;
+    maxBufferSize?: number;
+  },
+  context: {
+    cloudwatch: {
+      sdk: SdkAwsCloudwatch;
+      client?: CloudWatchLogsClient;
+    };
+  },
+): LogOutlet => {
+  const {
+    region: regionOverride,
+    logGroup,
+    logStream,
+    skipLogGroupCreation,
+    flushInterval,
+    maxBufferSize,
+  } = input;
+
+  const {
+    CloudWatchLogsClient: CloudWatchLogsClientClass,
+    CreateLogGroupCommand,
+    CreateLogStreamCommand,
+    PutLogEventsCommand,
+    ResourceAlreadyExistsException,
+  } = context.cloudwatch.sdk;
+
   // validate AWS credentials are present (fail-fast)
   assertAwsCredentialsPresent();
 
@@ -62,8 +98,8 @@ export const genCloudwatchOutlet = ({
   const logGroupName = logGroup ?? asLambdaStyleLogGroupName();
   const logStreamName = logStream ?? asDefaultLogStreamName();
 
-  // create client
-  const client = new CloudWatchLogsClient({ region });
+  // use provided client or create from sdk (sdk uses AWS_REGION env var)
+  const client = context.cloudwatch.client ?? new CloudWatchLogsClientClass({});
 
   // buffer for events
   const buffer: LogEvent[] = [];

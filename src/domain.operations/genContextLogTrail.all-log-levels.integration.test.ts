@@ -1,6 +1,6 @@
 import { given, then, when } from 'test-fns';
 
-import { genContextLogTrail, LogLevel } from '../index';
+import { genContextLogTrail, LogLevel } from '@src/index';
 
 const maskTimestamp = (log: Record<string, unknown>) => ({
   ...log,
