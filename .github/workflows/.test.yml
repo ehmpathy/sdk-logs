@@ -206,6 +206,12 @@ jobs:
       - name: prepare:rhachet
         run: npm run prepare:rhachet --if-present
 
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc before keyrack firewall so it can validate
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
+
       # .why = keyrack firewall translates and validates secrets before tests run
       #        - filters to declared keys in keyrack.yml
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
@@ -222,12 +228,6 @@ jobs:
         with:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
-
-      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
-      #        set AWS_PROFILE=oidc so keyrack strict mode is satisfied
-      - name: set AWS_PROFILE for keyrack
-        if: ${{ inputs.creds-aws-role-arn }}
-        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 
       - name: start:testdb
         run: npm run start:testdb --if-present
@@ -296,6 +296,12 @@ jobs:
       - name: prepare:rhachet
         run: npm run prepare:rhachet --if-present
 
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc before keyrack firewall so it can validate
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
+
       # .why = keyrack firewall translates and validates secrets before tests run
       #        - filters to declared keys in keyrack.yml
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
@@ -312,12 +318,6 @@ jobs:
         with:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
-
-      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
-      #        set AWS_PROFILE=oidc so keyrack strict mode is satisfied
-      - name: set AWS_PROFILE for keyrack
-        if: ${{ inputs.creds-aws-role-arn }}
-        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 
       - name: start:testdb
         run: npm run start:testdb --if-present
