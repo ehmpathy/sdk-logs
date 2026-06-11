@@ -206,21 +206,17 @@ jobs:
       - name: prepare:rhachet
         run: npm run prepare:rhachet --if-present
 
-      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
-      #        set AWS_PROFILE=oidc before keyrack firewall so it can validate
-      - name: set AWS_PROFILE for keyrack
-        if: ${{ inputs.creds-aws-role-arn }}
-        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
-
       # .why = keyrack firewall translates and validates secrets before tests run
       #        - filters to declared keys in keyrack.yml
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
       #        - blocks dangerous patterns (ghp_*, AKIA*, etc.)
       #        - exports to $GITHUB_ENV with mask applied
+      #        - AWS_PROFILE set here for OIDC auth (keyrack reads from envvar)
       - name: keyrack firewall
         run: npx rhachet keyrack firewall --env test --from 'json(env://SECRETS_JSON)' --into github.actions
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
+          AWS_PROFILE: ${{ inputs.creds-aws-role-arn && 'oidc' || '' }}
 
       - name: get aws auth, if creds supplied
         if: ${{ inputs.creds-aws-role-arn }}
@@ -296,21 +292,17 @@ jobs:
       - name: prepare:rhachet
         run: npm run prepare:rhachet --if-present
 
-      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
-      #        set AWS_PROFILE=oidc before keyrack firewall so it can validate
-      - name: set AWS_PROFILE for keyrack
-        if: ${{ inputs.creds-aws-role-arn }}
-        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
-
       # .why = keyrack firewall translates and validates secrets before tests run
       #        - filters to declared keys in keyrack.yml
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
       #        - blocks dangerous patterns (ghp_*, AKIA*, etc.)
       #        - exports to $GITHUB_ENV with mask applied
+      #        - AWS_PROFILE set here for OIDC auth (keyrack reads from envvar)
       - name: keyrack firewall
         run: npx rhachet keyrack firewall --env test --from 'json(env://SECRETS_JSON)' --into github.actions
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
+          AWS_PROFILE: ${{ inputs.creds-aws-role-arn && 'oidc' || '' }}
 
       - name: get aws auth, if creds supplied
         if: ${{ inputs.creds-aws-role-arn }}
