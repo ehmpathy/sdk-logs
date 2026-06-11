@@ -7,6 +7,9 @@ import type { LogTrail } from '@src/domain.objects/LogTrail';
 import { asCurrentIsoTimestamp } from './asCurrentIsoTimestamp';
 import { formatLogContentsForEnvironment } from './formatLogContentsForEnvironment';
 
+// re-export for backwards compatibility
+export type { LogMethod } from '@src/domain.objects/LogMethods';
+
 /*
   define priority order of log levels and make it easy to ask questions about
 */
@@ -26,7 +29,6 @@ const aIsEqualOrMoreImportantThanB = ({ a, b }: { a: LogLevel; b: LogLevel }) =>
     - define the format of the log message (json w/ level, timestamp, message, metadata)
     - define the transport of the message (console.log / console.warn)
 */
-export type LogMethod = (message: string, metadata?: any) => void;
 export const generateLogMethod = ({
   level,
   minimalLogLevel,

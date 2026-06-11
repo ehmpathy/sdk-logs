@@ -1,8 +1,4 @@
-import {
-  CloudWatchLogsClient,
-  DeleteLogGroupCommand,
-  GetLogEventsCommand,
-} from '@aws-sdk/client-cloudwatch-logs';
+import * as sdkAwsCloudwatch from '@aws-sdk/client-cloudwatch-logs';
 import { randomUUID } from 'crypto';
 import { given, then, when } from 'test-fns';
 
@@ -10,6 +6,9 @@ import { LogLevel } from '@src/domain.objects/constants';
 import type { LogEvent } from '@src/domain.objects/LogOutlet';
 
 import { genCloudwatchOutlet } from './genCloudwatchOutlet';
+
+const { CloudWatchLogsClient, DeleteLogGroupCommand, GetLogEventsCommand } =
+  sdkAwsCloudwatch;
 
 /**
  * .what = check if AWS credentials are available
@@ -97,12 +96,15 @@ describe('genCloudwatchOutlet.journey', () => {
           testRegion = region;
 
           // [t0] outlet created → log group and stream findserted
-          const outlet = genCloudwatchOutlet({
-            region,
-            logGroup: logGroupName,
-            logStream: logStreamName,
-            flushInterval: 60_000, // long interval to prevent auto-flush interference
-          });
+          const outlet = genCloudwatchOutlet(
+            {
+              region,
+              logGroup: logGroupName,
+              logStream: logStreamName,
+              flushInterval: 60_000, // long interval to prevent auto-flush interference
+            },
+            { cloudwatch: { sdk: sdkAwsCloudwatch } },
+          );
 
           // [t1] log messages → buffered
           const messages = [

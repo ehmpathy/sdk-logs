@@ -1,6 +1,6 @@
 import { given, then, when } from 'test-fns';
 
-import { genContextLogTrail } from '../index';
+import { genContextLogTrail } from '@src/index';
 
 describe('journey: trail state accessible for serialization', () => {
   given('[case1] context with trail', () => {

@@ -43,3 +43,25 @@ log.info(`we either want to or should keep track of this`, metadata); // use `.i
 
 log.debug(`this will help debug if things go wrong`, metadata); // use this for any information that could help debug when things go wrong (e.g., request/response data)
 ```
+
+### cloudwatch outlet
+
+for environments without automatic log collection (e.g., non-Lambda compute), you can forward logs directly to CloudWatch:
+
+```ts
+import * as sdkAwsCloudwatch from '@aws-sdk/client-cloudwatch-logs';
+import { genCloudwatchOutlet, genLogMethods } from 'sdk-logs';
+
+const outlet = genCloudwatchOutlet(
+  { region: 'us-east-1' },
+  { cloudwatch: { sdk: sdkAwsCloudwatch } },
+);
+
+const log = genLogMethods({ outlets: [outlet] });
+```
+
+note: the AWS SDK is injected via context to keep it as a peer dependency. install it separately:
+
+```
+npm install --save @aws-sdk/client-cloudwatch-logs
+```

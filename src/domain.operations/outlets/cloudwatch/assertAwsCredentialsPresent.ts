@@ -1,4 +1,4 @@
-import { BadRequestError } from '@ehmpathy/error-fns';
+import { BadRequestError } from 'helpful-errors';
 
 /**
  * .what = validates AWS credentials are available via common sources

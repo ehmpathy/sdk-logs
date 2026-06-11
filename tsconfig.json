@@ -13,11 +13,11 @@
     "target": "es2020",
     "lib": [
       "dom",
-      "es7"
+      "es2022"
     ],
     "incremental": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -36,6 +36,7 @@
     "**/*.ts"
   ],
   "exclude": [
+    ".agent/.cache",
     "dist",
     "coverage",
     "node_modules"
