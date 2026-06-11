@@ -211,12 +211,10 @@ jobs:
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
       #        - blocks dangerous patterns (ghp_*, AKIA*, etc.)
       #        - exports to $GITHUB_ENV with mask applied
-      #        - AWS_PROFILE set here for OIDC auth (keyrack reads from envvar)
       - name: keyrack firewall
         run: npx rhachet keyrack firewall --env test --from 'json(env://SECRETS_JSON)' --into github.actions
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
-          AWS_PROFILE: ${{ inputs.creds-aws-role-arn && 'oidc' || '' }}
 
       - name: get aws auth, if creds supplied
         if: ${{ inputs.creds-aws-role-arn }}
@@ -224,6 +222,12 @@ jobs:
         with:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
+
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc AFTER aws auth so keyrack.source() works
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 
       - name: start:testdb
         run: npm run start:testdb --if-present
@@ -297,12 +301,10 @@ jobs:
       #        - translates mechanisms (e.g., GitHub App → ghs_* token)
       #        - blocks dangerous patterns (ghp_*, AKIA*, etc.)
       #        - exports to $GITHUB_ENV with mask applied
-      #        - AWS_PROFILE set here for OIDC auth (keyrack reads from envvar)
       - name: keyrack firewall
         run: npx rhachet keyrack firewall --env test --from 'json(env://SECRETS_JSON)' --into github.actions
         env:
           SECRETS_JSON: ${{ toJSON(secrets) }}
-          AWS_PROFILE: ${{ inputs.creds-aws-role-arn && 'oidc' || '' }}
 
       - name: get aws auth, if creds supplied
         if: ${{ inputs.creds-aws-role-arn }}
@@ -310,6 +312,12 @@ jobs:
         with:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
+
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc AFTER aws auth so keyrack.source() works
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 
       - name: start:testdb
         run: npm run start:testdb --if-present
