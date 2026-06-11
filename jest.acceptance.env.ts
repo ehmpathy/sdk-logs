@@ -40,8 +40,7 @@ if (
  * .why =
  *   - auto-inject keys into process.env
  *   - fail fast with helpful error if keyrack locked or keys absent
- *   - skip when OIDC credentials present (AWS_ACCESS_KEY_ID set by aws-actions in CI)
  */
 const keyrackYmlPath = join(process.cwd(), '.agent/keyrack.yml');
-if (existsSync(keyrackYmlPath) && !process.env.AWS_ACCESS_KEY_ID)
+if (existsSync(keyrackYmlPath))
   keyrack.source({ env: 'test', owner: 'ehmpath', mode: 'strict' });
