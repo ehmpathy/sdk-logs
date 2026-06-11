@@ -223,6 +223,12 @@ jobs:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
 
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc so keyrack strict mode is satisfied
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
+
       - name: start:testdb
         run: npm run start:testdb --if-present
 
@@ -306,6 +312,12 @@ jobs:
         with:
           role-to-assume: ${{ inputs.creds-aws-role-arn }}
           aws-region: ${{ inputs.creds-aws-region }}
+
+      # .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+      #        set AWS_PROFILE=oidc so keyrack strict mode is satisfied
+      - name: set AWS_PROFILE for keyrack
+        if: ${{ inputs.creds-aws-role-arn }}
+        run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 
       - name: start:testdb
         run: npm run start:testdb --if-present
