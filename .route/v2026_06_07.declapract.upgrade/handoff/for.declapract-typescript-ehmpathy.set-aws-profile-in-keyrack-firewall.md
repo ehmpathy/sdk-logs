@@ -1,45 +1,51 @@
-# handoff: set AWS_PROFILE in keyrack firewall step
+# handoff: set AWS_PROFILE after OIDC auth for keyrack
 
 ## .what
 
-when OIDC AWS auth is used with keyrack, set `AWS_PROFILE=oidc` in the keyrack firewall step's env block.
+when OIDC AWS auth is used with keyrack, set `AWS_PROFILE=oidc` in a separate step AFTER aws auth but BEFORE tests.
 
 ## .why
 
 - OIDC auth sets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`
-- keyrack.yml declares `AWS_PROFILE` for local development
-- keyrack strict mode fails if declared keys are absent
-- set `AWS_PROFILE=oidc` to satisfy keyrack while strict mode is kept
+- keyrack.source() in jest setup checks for `AWS_PROFILE` in strict mode
+- `AWS_PROFILE=oidc` satisfies keyrack.source() while strict mode is kept
 
 ## .pattern
 
 ```yaml
-# .why = keyrack firewall translates and validates secrets before tests run
-#        - filters to declared keys in keyrack.yml
-#        - translates mechanisms (e.g., GitHub App → ghs_* token)
-#        - blocks dangerous patterns (ghp_*, AKIA*, etc.)
-#        - exports to $GITHUB_ENV with mask applied
-#        - sets AWS_PROFILE=oidc when oidc auth is used (keyrack declares AWS_PROFILE for local dev)
-- name: keyrack firewall
-  run: npx rhachet keyrack firewall --env test --from 'json(env://SECRETS_JSON)' --into github.actions
-  env:
-    SECRETS_JSON: ${{ toJSON(secrets) }}
-    AWS_PROFILE: ${{ inputs.creds-aws-role-arn && 'oidc' || '' }}
+- name: get aws auth, if creds supplied
+  if: ${{ inputs.creds-aws-role-arn }}
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: ${{ inputs.creds-aws-role-arn }}
+    aws-region: ${{ inputs.creds-aws-region }}
+
+# .why = keyrack declares AWS_PROFILE; oidc sets ACCESS_KEY_ID instead
+#        set AWS_PROFILE=oidc so keyrack strict mode is satisfied
+- name: set AWS_PROFILE for keyrack
+  if: ${{ inputs.creds-aws-role-arn }}
+  run: echo "AWS_PROFILE=oidc" >> $GITHUB_ENV
 ```
+
+## .important: do NOT declare AWS_PROFILE in keyrack.yml
+
+keyrack firewall validates that all declared keys exist in `SECRETS_JSON`. `AWS_PROFILE` is not a secret — it's set by us based on auth method. If declared in keyrack.yml, firewall will fail.
+
+repos that use OIDC for AWS auth should NOT include `AWS_PROFILE` in their keyrack.yml `env.all` section.
 
 ## .key details
 
-- conditional: only set if `inputs.creds-aws-role-arn` is provided
-- empty string fallback: `&& 'oidc' || ''` ensures no value when aws creds not used
-- location: in the keyrack firewall step's env block (not a separate step)
-- keeps strict mode: no need for lenient mode workaround
+- separate step: must be after aws-actions/configure-aws-credentials
+- conditional: only run when `inputs.creds-aws-role-arn` is provided
+- exports to GITHUB_ENV: available for all subsequent steps
+- keyrack.source() reads from process.env at test runtime
 
 ## .alternative considered (rejected)
 
-add a separate step after aws auth to set AWS_PROFILE via GITHUB_ENV — rejected because:
-- more steps = more complexity
-- keyrack firewall already exports to GITHUB_ENV
-- cleaner to set in same env block that keyrack reads
+set AWS_PROFILE in keyrack firewall step's env block — rejected because:
+- keyrack firewall validates secrets from `SECRETS_JSON`, not env vars
+- env block vars don't satisfy keyrack firewall validation
+- causes "blocked: no value to validate" error
 
 ## .where to apply
 
