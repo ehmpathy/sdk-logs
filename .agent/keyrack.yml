@@ -7,4 +7,5 @@ env.prod: null
 env.prep: null
 env.test: null
 env.all:
-  - AWS_PROFILE
+  - key: AWS_PROFILE
+    is-optional-if-has: AWS_ACCESS_KEY_ID
