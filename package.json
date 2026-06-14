@@ -2,7 +2,7 @@
   "name": "sdk-logs",
   "author": "ehmpathy",
   "description": "a simple and opinionated logging library. plays well with aws lambda + cloudwatch.",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "repository": "ehmpathy/sdk-logs",
   "homepage": "https://github.com/ehmpathy/sdk-logs",
   "keywords": [
